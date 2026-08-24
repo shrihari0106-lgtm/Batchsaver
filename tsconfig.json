@@ -1,0 +1,26 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@batchsaver/shared-types": ["./packages/shared-types/src/index.ts"],
+      "@batchsaver/shared-utils": ["./packages/shared-utils/src/index.ts"],
+      "@batchsaver/config": ["./packages/config/src/index.ts"],
+      "@batchsaver/api-contracts": ["./packages/api-contracts/src/index.ts"],
+      "@batchsaver/module-data-acquisition": ["./modules/data-acquisition/src/index.ts"],
+      "@batchsaver/module-quality-monitoring": ["./modules/quality-monitoring/src/index.ts"],
+      "@batchsaver/module-minimum-intervention": ["./modules/minimum-intervention/src/index.ts"],
+      "@batchsaver/module-operator-control": ["./modules/operator-control/src/index.ts"],
+      "@batchsaver/module-dashboard": ["./modules/dashboard/src/index.ts"],
+      "@batchsaver/module-traceability-security": ["./modules/traceability-security/src/index.ts"]
+    }
+  },
+  "include": [
+    "packages/*/src/**/*",
+    "modules/*/src/**/*",
+    "apps/*/src/**/*",
+    "tests/**/*",
+    "scripts/**/*"
+  ],
+  "exclude": ["node_modules", "dist", "build"]
+}

@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database with TimescaleDB / UUID support
+  postgres:
+    image: postgres:16-alpine
+    container_name: batchsaver-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: batchsaver_user
+      POSTGRES_PASSWORD: batchsaver_pass
+      POSTGRES_DB: batchsaver_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ../database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U batchsaver_user -d batchsaver_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MQTT Broker (Eclipse Mosquitto for Industrial IoT telemetry)
+  mqtt-broker:
+    image: eclipse-mosquitto:2.0
+    container_name: batchsaver-mqtt
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ../mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  # Backend API Service
+  api:
+    build:
+      context: ../../
+      dockerfile: infrastructure/docker/Dockerfile.api
+    container_name: batchsaver-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://batchsaver_user:batchsaver_pass@postgres:5432/batchsaver_db?schema=public
+      MQTT_BROKER_URL: mqtt://mqtt-broker:1883
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Frontend Dashboard
+  web:
+    build:
+      context: ../../
+      dockerfile: infrastructure/docker/Dockerfile.web
+    container_name: batchsaver-web
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+    driver: local

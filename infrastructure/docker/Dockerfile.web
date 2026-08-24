@@ -1,0 +1,9 @@
+# =============================================================================
+# BatchSaver Web Dashboard Dockerfile
+# Nginx Static Server
+# =============================================================================
+
+FROM nginx:alpine
+COPY apps/web/index.html /usr/share/nginx/html/index.html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

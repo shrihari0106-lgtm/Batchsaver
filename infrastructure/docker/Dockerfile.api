@@ -1,0 +1,28 @@
+# =============================================================================
+# BatchSaver Backend API Dockerfile
+# Multi-stage production build
+# =============================================================================
+
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Copy root workspace configurations
+COPY package.json tsconfig.base.json tsconfig.json ./
+COPY packages/ ./packages/
+COPY modules/ ./modules/
+COPY apps/api/ ./apps/api/
+
+# Build TypeScript packages and API app
+RUN npm install
+RUN npm run build || true
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=4000
+
+COPY --from=builder /app /app
+
+EXPOSE 4000
+CMD ["node", "apps/api/dist/src/index.js"]
