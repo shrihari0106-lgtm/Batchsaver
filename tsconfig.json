@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
+   
     "paths": {
       "@batchsaver/shared-types": ["./packages/shared-types/src/index.ts"],
       "@batchsaver/shared-utils": ["./packages/shared-utils/src/index.ts"],
