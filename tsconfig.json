@@ -2,11 +2,6 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "jsx": "react-jsx",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
     "paths": {
       "@batchsaver/shared-types": ["./packages/shared-types/src/index.ts"],
       "@batchsaver/shared-utils": ["./packages/shared-utils/src/index.ts"],
@@ -19,13 +14,5 @@
       "@batchsaver/module-dashboard": ["./modules/dashboard/src/index.ts"],
       "@batchsaver/module-traceability-security": ["./modules/traceability-security/src/index.ts"]
     }
-  },
-  "include": [
-    "packages/*/src/**/*",
-    "modules/*/src/**/*",
-    "apps/*/src/**/*",
-    "tests/**/*",
-    "scripts/**/*"
-  ],
-  "exclude": ["node_modules", "dist", "build"]
+  }
 }

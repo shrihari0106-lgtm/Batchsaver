@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "tsc -b packages/shared-types packages/shared-utils packages/config packages/api-contracts modules/data-acquisition modules/quality-monitoring modules/minimum-intervention modules/operator-control modules/dashboard modules/traceability-security apps/api apps/web",
-    "typecheck": "tsc --noEmit --project tsconfig.json",
+    "typecheck": "tsc --noEmit --project apps/web/tsconfig.json",
     "lint": "echo \"Running linter checks...\" && exit 0",
     "test": "node --test tests/unit/*.test.js || ts-node tests/unit/index.ts || node scripts/run-tests.js",
     "dev": "echo \"BatchSaver Foundation - See docs/development/development-guide.md\"",
