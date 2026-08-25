@@ -308,3 +308,170 @@ export interface AuthSession {
   readonly user: Omit<User, 'passwordHash'>;
   readonly expiresAt: string;
 }
+
+// ==========================================
+// 8. Module 2 — Quality Monitoring Types
+// ==========================================
+
+/** Direction of deviation relative to target (simple form for Module 2 use) */
+export type DeviationDirectionSimple = 'HIGH' | 'LOW' | 'WITHIN_TARGET';
+
+/** Trend of a parameter over recent readings */
+export type TrendDirection =
+  | 'STABLE'
+  | 'RISING'
+  | 'FALLING'
+  | 'DRIFTING_HIGH'
+  | 'DRIFTING_LOW';
+
+/** Full result of a single parameter quality evaluation */
+export interface ParameterQualityResult {
+  readonly id: string;
+  readonly batchId: string;
+  readonly timestamp: string;
+  readonly parameter: QualityParameter;
+  readonly value: number;
+  readonly unit: string;
+  readonly target: number;
+  readonly lowerLimit: number;
+  readonly upperLimit: number;
+  readonly absoluteDeviation: number;
+  readonly signedDeviation: number;
+  readonly percentageDeviation: number;
+  readonly direction: DeviationDirectionSimple;
+  readonly status: QualityState;
+  readonly parameterHealth: number; // 0–100
+  readonly trend: TrendDirection;
+  readonly dataQuality: 'GOOD' | 'UNCERTAIN' | 'BAD' | 'INVALID';
+}
+
+/** Snapshot of all parameters for a batch — Dashboard / Module 5 contract */
+export interface BatchQualitySnapshot {
+  readonly batchId: string;
+  readonly timestamp: string;
+  readonly overallHealth: number; // 0–100
+  readonly overallStatus: QualityState;
+  readonly parameters: {
+    readonly [K in QualityParameter]?: ParameterQualityResult;
+  };
+  readonly activeDeviations: readonly QualityParameter[];
+  readonly recovering: readonly QualityParameter[];
+}
+
+/** Configurable Quality Engine settings */
+export interface QualityEngineConfig {
+  /** Number of consecutive readings required before state upgrade (prevents flicker) */
+  readonly stateChangePersistenceCount: number;
+  /** Number of consecutive NOMINAL readings required before RECOVERED */
+  readonly recoveryStabilityCount: number;
+  /** Number of recent readings used for trend calculation */
+  readonly trendWindowSize: number;
+  /** Max age of a reading in ms before considered stale */
+  readonly staleReadingMaxAgeMs: number;
+  /** Hysteresis band as fraction of criticalTolerance (0–1) */
+  readonly hysteresisBandFraction: number;
+  /** Per-parameter weights for batch health score (must sum to 1.0) */
+  readonly healthWeights: {
+    readonly VISCOSITY: number;
+    readonly MOISTURE: number;
+    readonly COLOUR_INDEX: number;
+    readonly TEMPERATURE: number;
+  };
+}
+
+/** Result of validating an incoming sensor reading */
+export interface SensorValidationResult {
+  readonly valid: boolean;
+  readonly reason?: string;
+  readonly dataQuality: 'GOOD' | 'UNCERTAIN' | 'BAD' | 'INVALID';
+}
+
+// ==========================================
+// 9. Module 2 — Domain Events
+// ==========================================
+
+export type QualityEventType =
+  | 'QualityWarningDetected'
+  | 'QualityDeviationDetected'
+  | 'QualityCriticalDetected'
+  | 'QualityRecoveryStarted'
+  | 'QualityRecovered'
+  | 'BatchHealthChanged';
+
+export interface QualityDomainEventBase {
+  readonly eventType: QualityEventType;
+  readonly eventId: string;
+  readonly batchId: string;
+  readonly timestamp: string;
+}
+
+export interface QualityWarningDetectedEvent extends QualityDomainEventBase {
+  readonly eventType: 'QualityWarningDetected';
+  readonly parameter: QualityParameter;
+  readonly currentValue: number;
+  readonly targetValue: number;
+  readonly percentageDeviation: number;
+  readonly direction: DeviationDirectionSimple;
+  readonly parameterHealth: number;
+}
+
+export interface QualityDeviationDetectedEvent extends QualityDomainEventBase {
+  readonly eventType: 'QualityDeviationDetected';
+  readonly parameter: QualityParameter;
+  readonly currentValue: number;
+  readonly targetValue: number;
+  readonly lowerLimit: number;
+  readonly upperLimit: number;
+  readonly absoluteDeviation: number;
+  readonly percentageDeviation: number;
+  readonly direction: DeviationDirectionSimple;
+  readonly severity: DeviationSeverity;
+  readonly parameterHealth: number;
+}
+
+export interface QualityCriticalDetectedEvent extends QualityDomainEventBase {
+  readonly eventType: 'QualityCriticalDetected';
+  readonly parameter: QualityParameter;
+  readonly currentValue: number;
+  readonly targetValue: number;
+  readonly lowerLimit: number;
+  readonly upperLimit: number;
+  readonly absoluteDeviation: number;
+  readonly percentageDeviation: number;
+  readonly direction: DeviationDirectionSimple;
+  readonly severity: DeviationSeverity;
+  readonly parameterHealth: number;
+}
+
+export interface QualityRecoveryStartedEvent extends QualityDomainEventBase {
+  readonly eventType: 'QualityRecoveryStarted';
+  readonly parameter: QualityParameter;
+  readonly currentValue: number;
+  readonly targetValue: number;
+  readonly percentageDeviation: number;
+  readonly direction: DeviationDirectionSimple;
+  readonly previousStatus: QualityState;
+}
+
+export interface QualityRecoveredEvent extends QualityDomainEventBase {
+  readonly eventType: 'QualityRecovered';
+  readonly parameter: QualityParameter;
+  readonly currentValue: number;
+  readonly targetValue: number;
+  readonly parameterHealth: number;
+}
+
+export interface BatchHealthChangedEvent extends QualityDomainEventBase {
+  readonly eventType: 'BatchHealthChanged';
+  readonly previousScore: number;
+  readonly currentScore: number;
+  readonly overallStatus: QualityState;
+}
+
+export type QualityDomainEvent =
+  | QualityWarningDetectedEvent
+  | QualityDeviationDetectedEvent
+  | QualityCriticalDetectedEvent
+  | QualityRecoveryStartedEvent
+  | QualityRecoveredEvent
+  | BatchHealthChangedEvent;
